@@ -1,0 +1,32 @@
+{
+  "name": "generalized-claim-registry",
+  "version": "1.0.0",
+  "description": "Hardhat project for GeneralizedClaimRegistry smart contract",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "create-registry": "hardhat run scripts/createRegistry.js",
+    "create-registry:local": "hardhat run scripts/createRegistry.js --network localhost",
+    "create-registry:sepolia": "hardhat run scripts/createRegistry.js --network sepolia",
+    "verify": "hardhat run scripts/verify.js",
+    "verify:local": "hardhat run scripts/verify.js --network localhost",
+    "verify:sepolia": "hardhat run scripts/verify.js --network sepolia",
+    "node": "hardhat node",
+    "clean": "hardhat clean"
+  },
+  "keywords": ["hardhat", "ethereum", "smart-contracts", "claim-registry"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0",
+    "ethers": "^6.8.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0"
+  }
+}

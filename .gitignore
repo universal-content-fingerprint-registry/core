@@ -1,0 +1,80 @@
+# Node dependencies
+node_modules/
+
+# Hardhat cache & artifacts
+cache/
+artifacts/
+
+# Typechain generated files (if using Typechain)
+typechain/
+typechain-types/
+
+# Dotenv environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / Editor specific
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Coverage reports
+coverage/
+coverage.json
+lcov-report/
+
+# Hardhat deploy plugin deployments
+deployments/
+
+# Temporary files
+*.tsbuildinfo
+# Node dependencies
+node_modules/
+
+# Hardhat cache & artifacts
+cache/
+artifacts/
+
+# Typechain generated files (if using Typechain)
+typechain/
+typechain-types/
+
+# Dotenv environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / Editor specific
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Coverage reports
+coverage/
+coverage.json
+lcov-report/
+
+# Hardhat deploy plugin deployments
+deployments/
+
+# Temporary files
+*.tsbuildinfo

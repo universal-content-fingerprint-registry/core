@@ -483,9 +483,15 @@ describe("ClaimRegistryFactory", function () {
         .registerExternalID(1, "https://example.com/rsa", 256);
 
       const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
-      await registry
-        .connect(addr1)
-        .claimById(1, 1, fingerprint, "test metadata", "https://example.com");
+      await registry.connect(addr1).claim({
+        methodId: 1,
+        externalId: 1,
+        fingerprint,
+        externalSig: "0x",
+        pubKey: "0x",
+        metadata: "test metadata",
+        extURI: "https://example.com",
+      });
 
       // Verify the claim was created
       const claim = await registry.getClaimByIdWithExtId(1, fingerprint, 1);

@@ -4,7 +4,9 @@ async function main() {
   console.log("Deploying ClaimRegistryFactory...");
 
   // Get the contract factory
-  const ClaimRegistryFactory = await ethers.getContractFactory("ClaimRegistryFactory");
+  const ClaimRegistryFactory = await ethers.getContractFactory(
+    "ClaimRegistryFactory"
+  );
 
   // Deploy the factory contract
   const factory = await ClaimRegistryFactory.deploy();
@@ -27,7 +29,7 @@ async function main() {
   // Optional: Create sample registries for testing
   if (process.env.INITIALIZE === "true") {
     console.log("\nCreating sample registries...");
-    
+
     try {
       // Create a sample registry
       const tx = await factory.createRegistry(
@@ -35,8 +37,8 @@ async function main() {
         "A sample registry for testing purposes"
       );
       const receipt = await tx.wait();
-      
-      const event = receipt.logs.find(log => {
+
+      const event = receipt.logs.find((log) => {
         try {
           const parsed = factory.interface.parseLog(log);
           return parsed.name === "RegistryCreated";
@@ -44,44 +46,59 @@ async function main() {
           return false;
         }
       });
-      
+
       const sampleRegistryAddress = event.args.registryAddress;
       console.log("✓ Created sample registry at:", sampleRegistryAddress);
-      
+
       // Get the registry contract instance
-      const sampleRegistry = await ethers.getContractAt("GeneralizedClaimRegistry", sampleRegistryAddress);
-      
+      const sampleRegistry = await ethers.getContractAt(
+        "GeneralizedClaimRegistry",
+        sampleRegistryAddress
+      );
+
       // Register some methods in the sample registry
       await sampleRegistry.registerMethod(
-        1, 
-        "SHA-256", 
-        "https://tools.ietf.org/html/rfc6234", 
+        1,
+        "SHA-256",
+        "https://tools.ietf.org/html/rfc6234",
         32
       );
       console.log("✓ Registered SHA-256 method in sample registry");
 
       await sampleRegistry.registerMethod(
-        2, 
-        "MD5", 
-        "https://tools.ietf.org/html/rfc1321", 
+        2,
+        "MD5",
+        "https://tools.ietf.org/html/rfc1321",
         16
       );
       console.log("✓ Registered MD5 method in sample registry");
 
       // Register external IDs
       await sampleRegistry.registerExternalID(
-        1, 
-        "https://tools.ietf.org/html/rfc8017", 
+        1,
+        "https://tools.ietf.org/html/rfc8017",
         256
       );
       console.log("✓ Registered RSA-2048 external ID in sample registry");
 
       await sampleRegistry.registerExternalID(
-        2, 
-        "https://tools.ietf.org/html/rfc6979", 
+        2,
+        "https://tools.ietf.org/html/rfc6979",
         64
       );
       console.log("✓ Registered ECDSA external ID in sample registry");
+
+      // Optionally create a sample claim
+      const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("sample data"));
+      await sampleRegistry.claim({
+        methodId: 1,
+        externalId: 1,
+        fingerprint,
+        externalSig: "0x",
+        pubKey: "0x",
+        metadata: "Sample claim",
+        extURI: "https://example.com/sample",
+      });
 
       console.log("\n✓ Sample registry initialization complete!");
     } catch (error) {
@@ -99,7 +116,7 @@ async function main() {
 
   return {
     factoryAddress,
-    factory
+    factory,
   };
 }
 

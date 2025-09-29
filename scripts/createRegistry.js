@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   const factoryAddress =
-    process.env.FACTORY_ADDRESS || "0xE0CcFa6DebD5be29C6DE792583B6dBAab2eD41E4"; // GTN factory address
+    process.env.FACTORY_ADDRESS || "0x75FF3F0BAaE6188D6621F9feB87106e225c3f383"; // GTN factory address
 
   if (!factoryAddress) {
     console.error("Please set FACTORY_ADDRESS environment variable");

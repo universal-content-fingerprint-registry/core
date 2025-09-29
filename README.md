@@ -102,8 +102,7 @@ npm test
 
 #### Claim Functions
 
-- `claimByIdwithExternalSig()`: Create a claim with external signature(eg. RSA , HMAC)
-- `claimById()`: Create a claim without external signature
+- `claim(ClaimParams)`: Create a claim with optional external signature (RSA, HMAC, etc.)
 
 ## Security Considerations
 

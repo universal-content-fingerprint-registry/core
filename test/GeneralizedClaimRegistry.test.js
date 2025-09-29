@@ -224,24 +224,22 @@ describe("GeneralizedClaimRegistry", function () {
       await claimRegistry.registerExternalID(1, "https://example.com/rsa", 256);
     });
 
-    describe("claimByIdwithExternalSig", function () {
+    describe("claim (with external signature)", function () {
       it("Should allow user to claim with external signature", async function () {
         const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
         const externalSig = ethers.keccak256(ethers.toUtf8Bytes("signature"));
         const pubkey = ethers.keccak256(ethers.toUtf8Bytes("public key"));
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              1,
-              fingerprint,
-              externalSig,
-              pubkey,
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig,
+            pubKey: pubkey,
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.emit(claimRegistry, "Claimed");
       });
 
@@ -250,17 +248,15 @@ describe("GeneralizedClaimRegistry", function () {
         const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              1,
-              fingerprint,
-              "0x",
-              "0x",
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig: "0x",
+            pubKey: "0x",
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.be.revertedWith("method inactive");
       });
 
@@ -269,47 +265,41 @@ describe("GeneralizedClaimRegistry", function () {
         const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              1,
-              fingerprint,
-              "0x",
-              "0x",
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig: "0x",
+            pubKey: "0x",
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.be.revertedWith("externalID inactive");
       });
 
       it("Should not allow duplicate claims", async function () {
         const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
 
-        await claimRegistry
-          .connect(addr1)
-          .claimByIdwithExternalSig(
-            1,
-            1,
-            fingerprint,
-            "0x",
-            "0x",
-            "test metadata",
-            "https://example.com"
-          );
+        await claimRegistry.connect(addr1).claim({
+          methodId: 1,
+          externalId: 1,
+          fingerprint,
+          externalSig: "0x",
+          pubKey: "0x",
+          metadata: "test metadata",
+          extURI: "https://example.com",
+        });
 
         await expect(
-          claimRegistry
-            .connect(addr2)
-            .claimByIdwithExternalSig(
-              1,
-              1,
-              fingerprint,
-              "0x",
-              "0x",
-              "test metadata 2",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr2).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig: "0x",
+            pubKey: "0x",
+            metadata: "test metadata 2",
+            extURI: "https://example.com",
+          })
         ).to.be.revertedWith("claim exists");
       });
 
@@ -325,35 +315,33 @@ describe("GeneralizedClaimRegistry", function () {
         );
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              2,
-              fingerprint,
-              largeSig,
-              "0x",
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 2,
+            fingerprint,
+            externalSig: largeSig,
+            pubKey: "0x",
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.be.revertedWith("sig too large");
       });
     });
 
-    describe("claimById", function () {
+    describe("claim (without external signature)", function () {
       it("Should allow user to claim without external signature", async function () {
         const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimById(
-              1,
-              1,
-              fingerprint,
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig: "0x",
+            pubKey: "0x",
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.emit(claimRegistry, "Claimed");
       });
     });
@@ -370,38 +358,14 @@ describe("GeneralizedClaimRegistry", function () {
       await claimRegistry.registerExternalID(1, "https://example.com/rsa", 256);
 
       const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test data"));
-      await claimRegistry
-        .connect(addr1)
-        .claimById(1, 1, fingerprint, "test metadata", "https://example.com");
-    });
-
-    describe("getClaimById", function () {
-      it("Should return claim by method ID and fingerprint (with extId=0)", async function () {
-        // First create a claim with externalId = 0
-        await claimRegistry.registerExternalID(
-          0,
-          "https://example.com/none",
-          0
-        );
-        const fingerprint = ethers.keccak256(
-          ethers.toUtf8Bytes("test data zero")
-        );
-        await claimRegistry
-          .connect(addr1)
-          .claimById(
-            1,
-            0,
-            fingerprint,
-            "test metadata zero",
-            "https://example.com"
-          );
-
-        const claim = await claimRegistry.getClaimById(1, fingerprint);
-
-        expect(claim.creator).to.equal(addr1.address);
-        expect(claim.metadata).to.equal("test metadata zero");
-        expect(claim.methodId).to.equal(1);
-        expect(claim.externalId).to.equal(0);
+      await claimRegistry.connect(addr1).claim({
+        methodId: 1,
+        externalId: 1,
+        fingerprint,
+        externalSig: "0x",
+        pubKey: "0x",
+        metadata: "test metadata",
+        extURI: "https://example.com",
       });
     });
 
@@ -438,7 +402,15 @@ describe("GeneralizedClaimRegistry", function () {
 
       const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("test"));
       await expect(
-        claimRegistry.connect(addr1).claimById(1, 1, fingerprint, "", "")
+        claimRegistry.connect(addr1).claim({
+          methodId: 1,
+          externalId: 1,
+          fingerprint,
+          externalSig: "0x",
+          pubKey: "0x",
+          metadata: "",
+          extURI: "",
+        })
       ).to.emit(claimRegistry, "Claimed");
     });
 
@@ -457,17 +429,15 @@ describe("GeneralizedClaimRegistry", function () {
       );
 
       await expect(
-        claimRegistry
-          .connect(addr1)
-          .claimByIdwithExternalSig(
-            1,
-            1,
-            fingerprint,
-            largeSig,
-            "0x",
-            "test metadata",
-            "https://example.com"
-          )
+        claimRegistry.connect(addr1).claim({
+          methodId: 1,
+          externalId: 1,
+          fingerprint,
+          externalSig: largeSig,
+          pubKey: "0x",
+          metadata: "test metadata",
+          extURI: "https://example.com",
+        })
       ).to.emit(claimRegistry, "Claimed");
     });
   });
@@ -498,7 +468,7 @@ describe("GeneralizedClaimRegistry", function () {
     });
 
     describe("Realistic RSA Signature Implementation", function () {
-      it("Should demonstrate proper RSA-2048 signature with claimByIdwithExternalSig", async function () {
+      it("Should demonstrate proper RSA-2048 signature with claim()", async function () {
         // Document to be signed
         const document =
           "This is a legal contract for software licensing agreement";
@@ -538,15 +508,15 @@ describe("GeneralizedClaimRegistry", function () {
 
         // Create claim with RSA signature
         await expect(
-          claimRegistry.connect(addr1).claimByIdwithExternalSig(
-            1, // methodId: SHA-256
-            rsaExternalId, // externalId: RSA-2048 (ID: 1)
-            fingerprint, // fingerprint: SHA-256 hash of document
-            rsaSignature, // externalSig: RSA-2048 signature
-            rsaPublicKey, // pubkey: RSA-2048 public key
-            "Legal Contract", // metadata
-            "https://example.com/contract.pdf" // extURI
-          )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: rsaExternalId,
+            fingerprint,
+            externalSig: rsaSignature,
+            pubKey: rsaPublicKey,
+            metadata: "Legal Contract",
+            extURI: "https://example.com/contract.pdf",
+          })
         ).to.emit(claimRegistry, "Claimed");
 
         // Verify the claim was stored with proper RSA relationship
@@ -596,15 +566,15 @@ describe("GeneralizedClaimRegistry", function () {
           "0x" + Buffer.from(publicKey, "utf8").toString("hex");
 
         // Step 4: Register claim with RSA signature
-        await claimRegistry.connect(addr1).claimByIdwithExternalSig(
-          1, // SHA-256 method
-          1, // RSA-2048 external ID
-          documentHash, // Document fingerprint
-          rsaSignature, // RSA signature
-          rsaPublicKey, // RSA public key
-          "Software License", // Document type
-          "https://company.com/license.pdf"
-        );
+        await claimRegistry.connect(addr1).claim({
+          methodId: 1, // SHA-256 method
+          externalId: 1, // RSA-2048 external ID
+          fingerprint: documentHash, // Document fingerprint
+          externalSig: rsaSignature, // RSA signature
+          pubKey: rsaPublicKey, // RSA public key
+          metadata: "Software License", // Document type
+          extURI: "https://company.com/license.pdf",
+        });
 
         // Step 5: Real verification (off-chain)
         const isValid = crypto.verify(
@@ -628,7 +598,7 @@ describe("GeneralizedClaimRegistry", function () {
     });
 
     describe("Realistic HMAC Signature Implementation", function () {
-      it("Should demonstrate proper HMAC-SHA256 signature with claimByIdwithExternalSig", async function () {
+      it("Should demonstrate proper HMAC-SHA256 signature with claim()", async function () {
         // Message to be authenticated
         const message = "API request: GET /users/12345";
         const fingerprint = ethers.keccak256(ethers.toUtf8Bytes(message));
@@ -650,15 +620,15 @@ describe("GeneralizedClaimRegistry", function () {
 
         // Create claim with HMAC signature
         await expect(
-          claimRegistry.connect(addr1).claimByIdwithExternalSig(
-            1, // methodId: SHA-256
-            hmacExternalId, // externalId: HMAC-SHA256 (ID: 2)
-            fingerprint, // fingerprint: SHA-256 hash of message
-            hmacSignature, // externalSig: HMAC-SHA256 signature
-            emptyPublicKey, // pubkey: empty (HMAC doesn't use public keys)
-            "API Authentication", // metadata
-            "https://api.example.com/request" // extURI
-          )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1, // SHA-256
+            externalId: hmacExternalId, // HMAC-SHA256 (ID: 2)
+            fingerprint, // SHA-256 hash of message
+            externalSig: hmacSignature, // HMAC-SHA256 signature
+            pubKey: emptyPublicKey, // empty (HMAC doesn't use public keys)
+            metadata: "API Authentication",
+            extURI: "https://api.example.com/request",
+          })
         ).to.emit(claimRegistry, "Claimed");
 
         // Verify the claim was stored with proper HMAC relationship
@@ -688,15 +658,15 @@ describe("GeneralizedClaimRegistry", function () {
         const hmacSignature = "0x" + hmac.digest("hex");
 
         // Step 3: Register claim with HMAC signature
-        await claimRegistry.connect(addr1).claimByIdwithExternalSig(
-          1, // SHA-256 method
-          2, // HMAC-SHA256 external ID
-          messageHash, // Message fingerprint
-          hmacSignature, // HMAC signature
-          "0x", // No public key for HMAC
-          "Transaction Request", // Request type
-          "https://api.bank.com/transactions"
-        );
+        await claimRegistry.connect(addr1).claim({
+          methodId: 1, // SHA-256 method
+          externalId: 2, // HMAC-SHA256 external ID
+          fingerprint: messageHash, // Message fingerprint
+          externalSig: hmacSignature, // HMAC signature
+          pubKey: "0x", // No public key for HMAC
+          metadata: "Transaction Request", // Request type
+          extURI: "https://api.bank.com/transactions",
+        });
 
         // Step 4: Real verification (off-chain)
         const expectedHmac = crypto.createHmac("sha256", secretKey);
@@ -749,17 +719,15 @@ describe("GeneralizedClaimRegistry", function () {
         const rsaPublicKey =
           "0x" + Buffer.from(publicKey, "utf8").toString("hex");
 
-        await claimRegistry
-          .connect(addr1)
-          .claimByIdwithExternalSig(
-            1,
-            1,
-            fingerprint,
-            rsaSignature,
-            rsaPublicKey,
-            "Certificate",
-            "https://example.com/cert.pdf"
-          );
+        await claimRegistry.connect(addr1).claim({
+          methodId: 1,
+          externalId: 1,
+          fingerprint,
+          externalSig: rsaSignature,
+          pubKey: rsaPublicKey,
+          metadata: "Certificate",
+          extURI: "https://example.com/cert.pdf",
+        });
 
         const claim = await claimRegistry.getClaimByIdWithExtId(
           1,
@@ -790,17 +758,15 @@ describe("GeneralizedClaimRegistry", function () {
         const hmacSignature = "0x" + hmac.digest("hex");
         const emptyPublicKey = "0x";
 
-        await claimRegistry
-          .connect(addr1)
-          .claimByIdwithExternalSig(
-            1,
-            2,
-            fingerprint,
-            hmacSignature,
-            emptyPublicKey,
-            "Session Token",
-            "https://auth.example.com"
-          );
+        await claimRegistry.connect(addr1).claim({
+          methodId: 1,
+          externalId: 2,
+          fingerprint,
+          externalSig: hmacSignature,
+          pubKey: emptyPublicKey,
+          metadata: "Session Token",
+          extURI: "https://auth.example.com",
+        });
 
         const claim = await claimRegistry.getClaimByIdWithExtId(
           1,
@@ -864,15 +830,15 @@ describe("GeneralizedClaimRegistry", function () {
           const doc = documents[i];
           const fingerprint = ethers.keccak256(ethers.toUtf8Bytes(doc.content));
 
-          await claimRegistry.connect(addr1).claimByIdwithExternalSig(
-            1, // SHA-256 method
-            doc.externalId, // RSA (1) or HMAC (2)
+          await claimRegistry.connect(addr1).claim({
+            methodId: 1, // SHA-256 method
+            externalId: doc.externalId, // RSA (1) or HMAC (2)
             fingerprint, // Document fingerprint
-            doc.signature, // RSA or HMAC signature
-            doc.pubkey, // RSA public key or empty
-            doc.content, // Document content
-            `https://example.com/${doc.type.toLowerCase()}-${i + 1}`
-          );
+            externalSig: doc.signature, // RSA or HMAC signature
+            pubKey: doc.pubkey, // RSA public key or empty
+            metadata: doc.content, // Document content
+            extURI: `https://example.com/${doc.type.toLowerCase()}-${i + 1}`,
+          });
 
           // Verify proper field relationships
           const claim = await claimRegistry.getClaimByIdWithExtId(
@@ -906,15 +872,15 @@ describe("GeneralizedClaimRegistry", function () {
         );
 
         await expect(
-          claimRegistry.connect(addr1).claimByIdwithExternalSig(
-            1, // SHA-256 method
-            1, // RSA-2048 external ID
+          claimRegistry.connect(addr1).claim({
+            methodId: 1, // SHA-256 method
+            externalId: 1, // RSA-2048 external ID
             fingerprint,
-            rsaSignature,
-            rsaPublicKey,
-            "RSA signed document",
-            "https://example.com/rsa-document"
-          )
+            externalSig: rsaSignature,
+            pubKey: rsaPublicKey,
+            metadata: "RSA signed document",
+            extURI: "https://example.com/rsa-document",
+          })
         ).to.emit(claimRegistry, "Claimed");
 
         // Verify the claim was stored correctly
@@ -942,17 +908,15 @@ describe("GeneralizedClaimRegistry", function () {
         const oversizedSignature = "0x" + baseHash.slice(2).repeat(10);
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              1,
-              fingerprint,
-              oversizedSignature,
-              "0x",
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig: oversizedSignature,
+            pubKey: "0x",
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.be.revertedWith("sig too large");
       });
 
@@ -976,17 +940,15 @@ describe("GeneralizedClaimRegistry", function () {
           );
 
           await expect(
-            claimRegistry
-              .connect(addr1)
-              .claimByIdwithExternalSig(
-                1,
-                1,
-                fingerprint,
-                rsaSignature,
-                rsaPublicKey,
-                documents[i],
-                `https://example.com/document-${i + 1}`
-              )
+            claimRegistry.connect(addr1).claim({
+              methodId: 1,
+              externalId: 1,
+              fingerprint,
+              externalSig: rsaSignature,
+              pubKey: rsaPublicKey,
+              metadata: documents[i],
+              extURI: `https://example.com/document-${i + 1}`,
+            })
           ).to.emit(claimRegistry, "Claimed");
         }
 
@@ -1020,15 +982,15 @@ describe("GeneralizedClaimRegistry", function () {
         const emptyPublicKey = "0x";
 
         await expect(
-          claimRegistry.connect(addr1).claimByIdwithExternalSig(
-            1, // SHA-256 method
-            2, // HMAC-SHA256 external ID
+          claimRegistry.connect(addr1).claim({
+            methodId: 1, // SHA-256 method
+            externalId: 2, // HMAC-SHA256 external ID
             fingerprint,
-            hmacSignature,
-            emptyPublicKey,
-            "HMAC authenticated message",
-            "https://example.com/hmac-message"
-          )
+            externalSig: hmacSignature,
+            pubKey: emptyPublicKey,
+            metadata: "HMAC authenticated message",
+            extURI: "https://example.com/hmac-message",
+          })
         ).to.emit(claimRegistry, "Claimed");
 
         // Verify the claim was stored correctly
@@ -1061,17 +1023,15 @@ describe("GeneralizedClaimRegistry", function () {
           );
 
           await expect(
-            claimRegistry
-              .connect(addr1)
-              .claimByIdwithExternalSig(
-                1,
-                2,
-                fingerprint,
-                hmacSignature,
-                "0x",
-                messages[i],
-                `https://example.com/hmac-${i + 1}`
-              )
+            claimRegistry.connect(addr1).claim({
+              methodId: 1,
+              externalId: 2,
+              fingerprint,
+              externalSig: hmacSignature,
+              pubKey: "0x",
+              metadata: messages[i],
+              extURI: `https://example.com/hmac-${i + 1}`,
+            })
           ).to.emit(claimRegistry, "Claimed");
         }
 
@@ -1101,17 +1061,15 @@ describe("GeneralizedClaimRegistry", function () {
         const oversizedHmacSignature = "0x" + baseHash.slice(2).repeat(2);
 
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              2,
-              fingerprint,
-              oversizedHmacSignature,
-              "0x",
-              "test metadata",
-              "https://example.com"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 2,
+            fingerprint,
+            externalSig: oversizedHmacSignature,
+            pubKey: "0x",
+            metadata: "test metadata",
+            extURI: "https://example.com",
+          })
         ).to.be.revertedWith("sig too large");
       });
     });
@@ -1136,17 +1094,15 @@ describe("GeneralizedClaimRegistry", function () {
 
         // Create RSA claim
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              1,
-              fingerprint,
-              rsaSignature,
-              rsaPublicKey,
-              "RSA signed version",
-              "https://example.com/rsa"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 1,
+            fingerprint,
+            externalSig: rsaSignature,
+            pubKey: rsaPublicKey,
+            metadata: "RSA signed version",
+            extURI: "https://example.com/rsa",
+          })
         ).to.emit(claimRegistry, "Claimed");
 
         // Create HMAC claim with different fingerprint (since same fingerprint would conflict)
@@ -1154,17 +1110,15 @@ describe("GeneralizedClaimRegistry", function () {
           ethers.toUtf8Bytes("Mixed signature document HMAC")
         );
         await expect(
-          claimRegistry
-            .connect(addr1)
-            .claimByIdwithExternalSig(
-              1,
-              2,
-              hmacFingerprint,
-              hmacSignature,
-              "0x",
-              "HMAC signed version",
-              "https://example.com/hmac"
-            )
+          claimRegistry.connect(addr1).claim({
+            methodId: 1,
+            externalId: 2,
+            fingerprint: hmacFingerprint,
+            externalSig: hmacSignature,
+            pubKey: "0x",
+            metadata: "HMAC signed version",
+            extURI: "https://example.com/hmac",
+          })
         ).to.emit(claimRegistry, "Claimed");
 
         // Verify both claims exist
@@ -1219,15 +1173,15 @@ describe("GeneralizedClaimRegistry", function () {
 
           // Create individual claim
           await expect(
-            claimRegistry.connect(addr1).claimByIdwithExternalSig(
-              1, // SHA-256 method
-              doc.extId, // External ID (RSA=1, HMAC=2)
+            claimRegistry.connect(addr1).claim({
+              methodId: 1, // SHA-256 method
+              externalId: doc.extId, // External ID (RSA=1, HMAC=2)
               fingerprint,
               externalSig,
               pubKey,
-              doc.content,
-              extURI
-            )
+              metadata: doc.content,
+              extURI,
+            })
           ).to.emit(claimRegistry, "Claimed");
         }
 

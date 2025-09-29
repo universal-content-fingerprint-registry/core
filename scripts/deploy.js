@@ -22,8 +22,6 @@ async function main() {
   console.log("Deployed by:", deployer.address);
 
   // Verify deployment
-  const owner = await factory.owner();
-  console.log("Factory owner:", owner);
   console.log("Total registries:", await factory.totalRegistries());
 
   // Optional: Create sample registries for testing

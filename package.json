@@ -9,16 +9,23 @@
     "deploy": "hardhat run scripts/deploy.js",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:gtn": "hardhat run scripts/deploy.js --network gtn",
     "create-registry": "hardhat run scripts/createRegistry.js",
     "create-registry:local": "hardhat run scripts/createRegistry.js --network localhost",
     "create-registry:sepolia": "hardhat run scripts/createRegistry.js --network sepolia",
+    "create-registry:gtn": "hardhat run scripts/createRegistry.js --network gtn",
     "verify": "hardhat run scripts/verify.js",
     "verify:local": "hardhat run scripts/verify.js --network localhost",
     "verify:sepolia": "hardhat run scripts/verify.js --network sepolia",
     "node": "hardhat node",
     "clean": "hardhat clean"
   },
-  "keywords": ["hardhat", "ethereum", "smart-contracts", "claim-registry"],
+  "keywords": [
+    "hardhat",
+    "ethereum",
+    "smart-contracts",
+    "claim-registry"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {

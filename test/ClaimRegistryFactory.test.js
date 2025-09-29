@@ -19,19 +19,8 @@ describe("ClaimRegistryFactory", function () {
   });
 
   describe("Deployment", function () {
-    it("Should set the right owner", async function () {
-      expect(await factory.owner()).to.equal(owner.address);
-    });
-
     it("Should initialize with zero total registries", async function () {
       expect(await factory.totalRegistries()).to.equal(0);
-    });
-
-    it("Should return empty arrays initially", async function () {
-      expect(await factory.getAllRegistries()).to.deep.equal([]);
-      expect(await factory.getRegistriesByCreator(addr1.address)).to.deep.equal(
-        []
-      );
     });
   });
 
@@ -56,7 +45,6 @@ describe("ClaimRegistryFactory", function () {
       const registryAddress = await factory.registryById(0);
       const registryInfo = await factory.getRegistryInfo(registryAddress);
 
-      expect(registryInfo.registryAddress).to.equal(registryAddress);
       expect(registryInfo.creator).to.equal(addr1.address);
       expect(registryInfo.name).to.equal(name);
       expect(registryInfo.description).to.equal(description);
@@ -75,18 +63,25 @@ describe("ClaimRegistryFactory", function () {
         .connect(addr2)
         .createRegistry("Registry 3", "Description 3");
 
-      const addr1Registries = await factory.getRegistriesByCreator(
-        addr1.address
+      expect(await factory.totalRegistries()).to.equal(3);
+
+      // Check individual registries by ID
+      const registry0 = await factory.getRegistryInfo(
+        await factory.registryById(0)
       );
-      const addr2Registries = await factory.getRegistriesByCreator(
-        addr2.address
+      const registry1 = await factory.getRegistryInfo(
+        await factory.registryById(1)
+      );
+      const registry2 = await factory.getRegistryInfo(
+        await factory.registryById(2)
       );
 
-      expect(addr1Registries.length).to.equal(2);
-      expect(addr2Registries.length).to.equal(1);
+      expect(registry0.creator).to.equal(addr1.address);
+      expect(registry1.creator).to.equal(addr1.address);
+      expect(registry2.creator).to.equal(addr2.address);
     });
 
-    it("Should maintain all registries array", async function () {
+    it("Should maintain registry count correctly", async function () {
       await factory
         .connect(addr1)
         .createRegistry("Registry 1", "Description 1");
@@ -94,8 +89,7 @@ describe("ClaimRegistryFactory", function () {
         .connect(addr2)
         .createRegistry("Registry 2", "Description 2");
 
-      const allRegistries = await factory.getAllRegistries();
-      expect(allRegistries.length).to.equal(2);
+      expect(await factory.totalRegistries()).to.equal(2);
     });
 
     it("Should return the correct registry address", async function () {
@@ -142,70 +136,6 @@ describe("ClaimRegistryFactory", function () {
       // Test that the created registry is functional
       expect(await registry.admin()).to.equal(addr1.address);
       expect(await registry.adminLocked()).to.equal(false);
-    });
-  });
-
-  describe("createMultipleRegistries", function () {
-    it("Should create multiple registries successfully", async function () {
-      const names = ["Registry 1", "Registry 2", "Registry 3"];
-      const descriptions = ["Description 1", "Description 2", "Description 3"];
-
-      const tx = await factory
-        .connect(addr1)
-        .createMultipleRegistries(names, descriptions);
-      const receipt = await tx.wait();
-
-      // Get registry addresses from events
-      const registryAddresses = [];
-      for (const log of receipt.logs) {
-        try {
-          const parsed = factory.interface.parseLog(log);
-          if (parsed.name === "RegistryCreated") {
-            registryAddresses.push(parsed.args.registryAddress);
-          }
-        } catch (e) {
-          // Skip logs that can't be parsed
-        }
-      }
-
-      expect(registryAddresses.length).to.equal(3);
-      expect(await factory.totalRegistries()).to.equal(3);
-
-      for (let i = 0; i < 3; i++) {
-        const registryInfo = await factory.getRegistryInfo(
-          registryAddresses[i]
-        );
-        expect(registryInfo.name).to.equal(names[i]);
-        expect(registryInfo.description).to.equal(descriptions[i]);
-        expect(registryInfo.creator).to.equal(addr1.address);
-      }
-    });
-
-    it("Should revert on array length mismatch", async function () {
-      const names = ["Registry 1", "Registry 2"];
-      const descriptions = ["Description 1"];
-
-      await expect(
-        factory.connect(addr1).createMultipleRegistries(names, descriptions)
-      ).to.be.revertedWith("Arrays length mismatch");
-    });
-
-    it("Should revert on empty arrays", async function () {
-      const names = [];
-      const descriptions = [];
-
-      await expect(
-        factory.connect(addr1).createMultipleRegistries(names, descriptions)
-      ).to.be.revertedWith("Empty arrays");
-    });
-
-    it("Should revert on too many registries", async function () {
-      const names = new Array(11).fill("Registry");
-      const descriptions = new Array(11).fill("Description");
-
-      await expect(
-        factory.connect(addr1).createMultipleRegistries(names, descriptions)
-      ).to.be.revertedWith("Too many registries in one transaction");
     });
   });
 
@@ -360,43 +290,21 @@ describe("ClaimRegistryFactory", function () {
     it("Should return correct registry info", async function () {
       const info = await factory.getRegistryInfo(registryAddress1);
 
-      expect(info.registryAddress).to.equal(registryAddress1);
       expect(info.creator).to.equal(addr1.address);
       expect(info.name).to.equal("Registry 1");
       expect(info.description).to.equal("Description 1");
       expect(info.active).to.equal(true);
     });
 
-    it("Should return registries by creator", async function () {
-      const addr1Registries = await factory.getRegistriesByCreator(
-        addr1.address
-      );
-      const addr2Registries = await factory.getRegistriesByCreator(
-        addr2.address
-      );
+    it("Should track registry addresses correctly", async function () {
+      expect(await factory.doesRegistryExist(registryAddress1)).to.equal(true);
+      expect(await factory.doesRegistryExist(registryAddress2)).to.equal(true);
 
-      expect(addr1Registries).to.include(registryAddress1);
-      expect(addr2Registries).to.include(registryAddress2);
-    });
+      const registry1Info = await factory.getRegistryInfo(registryAddress1);
+      const registry2Info = await factory.getRegistryInfo(registryAddress2);
 
-    it("Should return all registries", async function () {
-      const allRegistries = await factory.getAllRegistries();
-
-      expect(allRegistries).to.include(registryAddress1);
-      expect(allRegistries).to.include(registryAddress2);
-      expect(allRegistries.length).to.equal(2);
-    });
-
-    it("Should return correct registry count by creator", async function () {
-      expect(await factory.getRegistryCountByCreator(addr1.address)).to.equal(
-        1
-      );
-      expect(await factory.getRegistryCountByCreator(addr2.address)).to.equal(
-        1
-      );
-      expect(await factory.getRegistryCountByCreator(owner.address)).to.equal(
-        0
-      );
+      expect(registry1Info.creator).to.equal(addr1.address);
+      expect(registry2Info.creator).to.equal(addr2.address);
     });
 
     it("Should check registry existence correctly", async function () {
@@ -419,30 +327,12 @@ describe("ClaimRegistryFactory", function () {
     });
   });
 
-  describe("Admin Functions", function () {
-    it("Should transfer ownership", async function () {
-      await factory.transferOwnership(addr1.address);
-      expect(await factory.owner()).to.equal(addr1.address);
-    });
-
-    it("Should not allow non-owner to transfer ownership", async function () {
-      await expect(
-        factory.connect(addr1).transferOwnership(addr2.address)
-      ).to.be.revertedWith("Only owner can call this function");
-    });
-
-    it("Should not allow transfer to zero address", async function () {
-      await expect(
-        factory.transferOwnership(ethers.ZeroAddress)
-      ).to.be.revertedWith("New owner cannot be zero address");
-    });
-
+  describe("Factory Stats", function () {
     it("Should return factory stats", async function () {
       await factory.connect(addr1).createRegistry("Test", "Test Description");
 
-      const [total, factoryOwner] = await factory.getFactoryStats();
+      const total = await factory.getFactoryStats();
       expect(total).to.equal(1);
-      expect(factoryOwner).to.equal(owner.address);
     });
   });
 
@@ -513,16 +403,21 @@ describe("ClaimRegistryFactory", function () {
 
       // Verify counts
       expect(await factory.totalRegistries()).to.equal(3);
-      expect(await factory.getRegistryCountByCreator(addr1.address)).to.equal(
-        2
+
+      // Verify registries by checking their info
+      const registry0Info = await factory.getRegistryInfo(
+        await factory.registryById(0)
       );
-      expect(await factory.getRegistryCountByCreator(addr2.address)).to.equal(
-        1
+      const registry1Info = await factory.getRegistryInfo(
+        await factory.registryById(1)
+      );
+      const registry2Info = await factory.getRegistryInfo(
+        await factory.registryById(2)
       );
 
-      // Verify all registries are tracked
-      const allRegistries = await factory.getAllRegistries();
-      expect(allRegistries.length).to.equal(3);
+      expect(registry0Info.creator).to.equal(addr1.address);
+      expect(registry1Info.creator).to.equal(addr1.address);
+      expect(registry2Info.creator).to.equal(addr2.address);
     });
   });
 });

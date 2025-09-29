@@ -1,7 +1,8 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const factoryAddress = process.env.FACTORY_ADDRESS;
+  const factoryAddress =
+    process.env.FACTORY_ADDRESS || "0xE0CcFa6DebD5be29C6DE792583B6dBAab2eD41E4"; // GTN factory address
 
   if (!factoryAddress) {
     console.error("Please set FACTORY_ADDRESS environment variable");
@@ -9,8 +10,7 @@ async function main() {
   }
 
   const name = process.env.REGISTRY_NAME || "My Registry";
-  const description =
-    process.env.REGISTRY_DESCRIPTION || "A new claim registry";
+  const description = process.env.REGISTRY_DESCRIPTION || "https://ucfr.io";
 
   console.log("Creating new registry through factory...");
   console.log("Factory address:", factoryAddress);

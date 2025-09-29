@@ -89,7 +89,7 @@ async function main() {
       // Optionally create a sample claim
       const fingerprint = ethers.keccak256(ethers.toUtf8Bytes("sample data"));
       await sampleRegistry.claim({
-        methodId: 1,
+        methodId: 0,
         externalId: 1,
         fingerprint,
         externalSig: "0x",

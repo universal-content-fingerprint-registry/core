@@ -56,7 +56,7 @@ async function main() {
 
       // Register some methods in the sample registry
       await sampleRegistry.registerMethod(
-        1,
+        0,
         "SHA-256",
         "https://tools.ietf.org/html/rfc6234",
         32
@@ -64,7 +64,7 @@ async function main() {
       console.log("✓ Registered SHA-256 method in sample registry");
 
       await sampleRegistry.registerMethod(
-        2,
+        1,
         "MD5",
         "https://tools.ietf.org/html/rfc1321",
         16
@@ -73,14 +73,14 @@ async function main() {
 
       // Register external IDs
       await sampleRegistry.registerExternalID(
-        1,
+        0,
         "https://tools.ietf.org/html/rfc8017",
         256
       );
       console.log("✓ Registered RSA-2048 external ID in sample registry");
 
       await sampleRegistry.registerExternalID(
-        2,
+        1,
         "https://tools.ietf.org/html/rfc6979",
         64
       );

@@ -91,7 +91,6 @@ contract GeneralizedClaimRegistry {
         uint32 fpSizeBytes
     ) external {
         require(msg.sender == admin && !adminLocked, "auth");
-        require(methodId != 0, "invalid id");
         require(methods[methodId].fpSizeBytes == 0, "exists");
         methods[methodId] = Method(methodId, name, specURI, fpSizeBytes, true);
         emit MethodRegistered(methodId, name, fpSizeBytes);
@@ -109,7 +108,6 @@ contract GeneralizedClaimRegistry {
         uint32 sigSizeHint
     ) external {
         require(msg.sender == admin && !adminLocked, "auth");
-        require(extId != 0, "invalid id");
         require(externalIDs[extId].extId == 0, "exists");
         externalIDs[extId] = ExternalID(extId, specURI, sigSizeHint, true);
         emit ExternalIDRegistered(extId, specURI, sigSizeHint);
